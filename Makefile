@@ -6,15 +6,19 @@ BISON_SOURCE = src/MakeLanguage.y
 BISON_PRECOMPILED = build/MakeLanguage.c
 CCFLAGS = 
 
-.PHONY: all clean
+.PHONY: all clean lex bison
 
 all: $(TARGET)
 
 $(TARGET): $(MAIN_SOURCE) MakeFile $(LEX_PRECOMPILED) $(BISON_PRECOMPILED)
 	gcc $(MAIN_SOURCE) $(LEX_PRECOMPILED) $(BISON_PRECOMPILED) -o $(TARGET) $(CCFLAGS)
 
+bison: $(BISON_PRECOMPILED)
+
 $(BISON_PRECOMPILED): $(BISON_SOURCE)
 	bison -d $(BISON_SOURCE) -o $(BISON_PRECOMPILED)
+
+lex: $(LEX_PRECOMPILED)
 
 $(LEX_PRECOMPILED): $(LEX_SOURCE)
 	cd build; flex ../$(LEX_SOURCE);
