@@ -3,13 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+extern int line;
+
 extern FILE* yyin;
 
 int yylex(void);
 
 void yyerror(const char *str)
 {
-    printf("Error\n");
+    printf("Error on line: %d\n", line);
 }
 
 int main(int argc, char* argv[])
@@ -33,10 +35,10 @@ int main(int argc, char* argv[])
         }
         if (strcmp(argv[argc - 2], "-f") == 0)
         {
-            target = argv[1];
+            MainTarget = argv[1];
         }
         else 
-            target = argv[argc - 1];
+            MainTarget = argv[argc - 1];
     }
     if (yyin == NULL)
     {
