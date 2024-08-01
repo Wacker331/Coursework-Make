@@ -6,65 +6,38 @@
 
     extern int line;
 
-    void print_token(const char* token_type, const char* token_text) {
-        printf("%s: %s\n", token_type, token_text);
-}
+    void print_token(const char* token_type, const char* token_text) 
+    {
+        printf("Line: %d - %s: \"%s\"\n", line, token_type, token_text);
+    }
 %}
 
 %option noyywrap
 
-WORD      (\${1,2}@)?[A-Za-z0-9\._%/-]+
-WORD_WITH (\$\$?@)?[A-Za-z0-9\._%\/-][A-Za-z0-9\._%\/-:]*[A-Za-z0-9\._%\/-]
-RECIPE      ((\t)|(" "{2,4}))[^ ].*
-COMMENT     ^#.*
+SPECIAL_CONSTANTS   (.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|NOTINTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX))
+RESERVED_WORDS      (include|define|endef)
+SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|;|>|<|\^|@|\?|\+|!|\||&|\{|\})
+
+TOKEN      [A-Za-z0-9\._%/-]+
+COMMENT     #.*
+NAME [A-Za-z_]{TOKEN}
 
 %%
-"include"|"define"|"endef" {print_token("SPECIAL", yytext); return SPECIAL;}
+{SPECIAL_CONSTANTS} {print_token("SPECIAL_CONSTANTS", yytext); return yytext;}
+{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); return yytext;}
+{SPECIAL_SYMBOLS} {print_token("SPECIAL_SYMBOLS", yytext); return *yytext;}
 
-\$\$[<\^\+\*>] {print_token("SPECIAL_VARIABLE", yytext); return SPECIAL_VARIABLE;}
+^((\t)|(" "{2,4}))+ {print_token("TAB", yytext); return TAB;}
 
-{RECIPE} { print_token("RECIPE", yytext + 1); return RECIPE; }
+{COMMENT} {print_token("COMMENT", yytext);}
+{NAME} {print_token("NAME", yytext); return NAME;}
+{TOKEN} {print_token("TOKEN", yytext);return TOKEN;}
 
-{WORD_WITH} {
-    print_token("WORD", yytext);
-    return WORD;
-}
+(" "|\t)+ {print_token("SPACE", yytext); return SPACE;}
 
-{WORD} {
-    print_token("WORD", yytext);
-    return WORD;
-}
+\\" "*{COMMENT}?\n" "* {print_token("PERENOS", yytext); line++;}
+\n {print_token("SEPARATOR", yytext); line++; return SEPARATOR;}
 
-([:]{0,3}|\??|\!?|\+?)= {print_token("=", yytext); return '='; }
-
-\${1,2} {print_token("$", yytext); return '$';}
-
-\( {print_token("(", yytext); return '(';}
-
-\) {print_token(")", yytext);return ')';}
-
-\{ {print_token("{", yytext);return '{';}
-
-\} {print_token("}", yytext);return '}';}
-
-\! {print_token("!", yytext);return '!';}
-
-\? {print_token("?", yytext);return '?';}
-
-\| {print_token("|", yytext);return '|';}
-
-:{1,2} {print_token(":", yytext);return ':';}
-
-\\\n[ \t]*  {print_token("CONTINUATOR", yytext); line++; return CONTINUATOR;}
-
-\> {print_token(">", yytext);return '>';}
-
-{COMMENT} { print_token("COMMENT", yytext); }
-
-\n  { print_token("\\n", yytext); line++; return SEPARATOR;}
-
-[ ] { print_token("SPACE", yytext);}
-
-.   { print_token("UNKNOWN", yytext); }
+.   { print_token("UNKNOWN", yytext); return UNKNOWN;}
 
 %%

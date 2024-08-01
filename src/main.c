@@ -11,7 +11,7 @@ int yylex(void);
 
 void yyerror(const char *str)
 {
-    printf("Error on line: %d\n", line);
+    printf("%s error on line: %d\n", str, line);
 }
 
 int main(int argc, char* argv[])
