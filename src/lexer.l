@@ -23,8 +23,8 @@ COMMENT     #.*
 NAME [A-Za-z_]{TOKEN}
 
 %%
-{SPECIAL_CONSTANTS} {print_token("SPECIAL_CONSTANTS", yytext); return yytext;}
-{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); return yytext;}
+{SPECIAL_CONSTANTS} {print_token("SPECIAL_CONSTANTS", yytext); yylval.stringValue = yytext; return SPECIAL_CONSTANTS;}
+{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); yylval.stringValue = yytext; return RESERVED_WORDS;}
 {SPECIAL_SYMBOLS} {print_token("SPECIAL_SYMBOLS", yytext); return *yytext;}
 
 ^((\t)|(" "{2,4}))+ {print_token("TAB", yytext); return TAB;}

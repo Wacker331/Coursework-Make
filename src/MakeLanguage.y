@@ -15,8 +15,7 @@
   char charValue;
   char* stringValue;
 }
-%debug
-%token WORD TAB SPACE UNKNOWN SEPARATOR NAME TOKEN
+%token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS
 
 %%
 result: SEPARATOR result
@@ -30,20 +29,39 @@ VARIABLE: NAME '='
           | NAME SPACE '='
           | VARIABLE SENTENCE
 
+          | SPECIAL_CONSTANTS '='
+          | SPECIAL_CONSTANTS SPACE '='
+
 TARGET: NAME SPACE ':'
+        {
+          printf("WORKS\n");
+        }
         | NAME ':'
-        | TARGET SENTENCE
+        | TARGET DEPENDENCIES
+        | TARGET SPACE DEPENDENCIES
         | TARGET SEPARATOR RECIPE
+        | TARGET SEPARATOR
+        | '$' '(' NAME ')' SPACE ':'
+        | '$' '(' NAME ')' ':'
+        | '$' '(' NAME ')' SPACE TARGET
+        | NAME SPACE TARGET
+
+        | SPECIAL_CONSTANTS SPACE ':'
+        | SPECIAL_CONSTANTS ':'
 
 RECIPE: TAB SENTENCE
         | TAB SENTENCE RECIPE
 
+DEPENDENCIES: NAME
+              | NAME SPACE DEPENDENCIES
+              | '$' '(' NAME ')'
+              | '$' '(' NAME ')' SPACE DEPENDENCIES
+
 SENTENCE: TOKEN SPACE SENTENCE
           | NAME SPACE SENTENCE
-          | WORD SPACE SENTENCE
           | TOKEN
           | NAME
           | SPACE
-          | WORD
-
+          | '$' '(' NAME ')'
+          | '$' '(' NAME ')' SPACE SENTENCE
 %%
