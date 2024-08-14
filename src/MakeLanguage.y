@@ -15,53 +15,63 @@
   char charValue;
   char* stringValue;
 }
-%token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS
+%token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS DEFINE ENDEF
 
 %%
 result: SEPARATOR result
         | VARIABLE result
-        | TARGET result
-        | VARIABLE
-        | TARGET
-        | SEPARATOR
-
-VARIABLE: NAME '='
-          | NAME SPACE '='
-          | VARIABLE SENTENCE
-
-          | SPECIAL_CONSTANTS '='
-          | SPECIAL_CONSTANTS SPACE '='
-
-TARGET: NAME SPACE ':'
+        | TARGET DEPENDENCIES SEPARATOR RECIPE result
         {
-          printf("WORKS\n");
+          printf("TARGET REDUCED in result\n");
         }
-        | NAME ':'
-        | TARGET DEPENDENCIES
-        | TARGET SPACE DEPENDENCIES
-        | TARGET SEPARATOR RECIPE
-        | TARGET SEPARATOR
-        | '$' '(' NAME ')' SPACE ':'
-        | '$' '(' NAME ')' ':'
-        | '$' '(' NAME ')' SPACE TARGET
-        | NAME SPACE TARGET
+        | DIRECTIVE result
+        | '$' '(' NAME ')' result
+        |
 
-        | SPECIAL_CONSTANTS SPACE ':'
+TARGET: name ':'
+				{
+          printf("TARGET REDUCED\n");
+        }
+				| name ':' ':'
+        | name TARGET
+				{
+          printf("TARGET CONTINUES\n");
+        }
         | SPECIAL_CONSTANTS ':'
 
-RECIPE: TAB SENTENCE
-        | TAB SENTENCE RECIPE
+VARIABLE: NAME '=' SENTENCE
+					| NAME '?' '=' SENTENCE
+					| NAME '+' '=' SENTENCE
+					| NAME '!' '=' SENTENCE
+          | SPECIAL_CONSTANTS '='
 
-DEPENDENCIES: NAME
-              | NAME SPACE DEPENDENCIES
-              | '$' '(' NAME ')'
-              | '$' '(' NAME ')' SPACE DEPENDENCIES
+RECIPE: 
+        | TAB RECIPE_SENTENCE SEPARATOR RECIPE
 
-SENTENCE: TOKEN SPACE SENTENCE
-          | NAME SPACE SENTENCE
-          | TOKEN
-          | NAME
-          | SPACE
-          | '$' '(' NAME ')'
-          | '$' '(' NAME ')' SPACE SENTENCE
+DEPENDENCIES:  
+              | name DEPENDENCIES
+
+RECIPE_SENTENCE: TOKEN RECIPE_SENTENCE
+								| name RECIPE_SENTENCE
+								| UNKNOWN RECIPE_SENTENCE
+								| '$' RECIPE_SENTENCE
+                | ':' RECIPE_SENTENCE
+								| 
+
+SENTENCE: TOKEN
+          | name
+          | TOKEN SENTENCE
+          | name SENTENCE
+					| TOKEN '$' SENTENCE
+          | name '$' SENTENCE
+
+DIRECTIVE: DEFINE NAME SEPARATOR RECIPE ENDEF
+          | DEFINE NAME '=' SEPARATOR RECIPE ENDEF
+					| DEFINE NAME '?' '=' SEPARATOR RECIPE ENDEF
+					| DEFINE NAME '+' '=' SEPARATOR RECIPE ENDEF
+					| DEFINE NAME '!' '=' SEPARATOR RECIPE ENDEF
+
+name: NAME
+      | '$' '(' NAME ')'
+      | '$' '$' '(' NAME ')'
 %%
