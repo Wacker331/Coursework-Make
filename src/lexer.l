@@ -15,25 +15,30 @@
 %option noyywrap
 
 SPECIAL_CONSTANTS   (.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|NOTINTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX))
-RESERVED_WORDS      (include|define|endef)
+RESERVED_WORDS      (include|define|endef|override|undefine)
 SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|;|>|<|\^|@|\?|\+|!|\||&|\{|\})
 PERENOS             \\" "*{COMMENT}?\n" "*
 
-TOKEN               [A-Za-z0-9$\._%/-]+
+TOKEN               [A-Za-z0-9\*$@\._%/-]+
 COMMENT             #.*
-NAME                [A-Za-z_]{TOKEN}
+NAME                [A-Za-z_\*%/]{TOKEN}?
 
-TARGET_NAME         ((($"("{NAME}")")|({NAME}))" "*)+
-DEPENDENCIES        ((($"("{NAME}")")|({NAME}))" "*{PERENOS}?)*
-RECIPE              " "{2,}(.[^\n])*
+TARGET_NAME         ((($$?"("{NAME}")")|({NAME}))" "*)+
+DEPENDENCIES        ((($$?"("{TOKEN}")")|({NAME})|($$?"("((patsubst)|(addsuffix))" ".*")")|$$?(<|\^|\+|\*))" "*{PERENOS}?)*
+RECIPE              (" "{2,}|\t)+(.)*
 
 %%
-{SPECIAL_CONSTANTS}" "*(:|=)" "*{DEPENDENCIES} {print_token("SPECIAL_CONSTANTS", yytext); /*return yytext;*/}
-{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); return yytext;}
+include" "+{DEPENDENCIES} {print_token("INCLUDE", yytext);}
+define" "+{NAME}" "*((:{1,3}|\?|\+|!)?=)? {print_token("DEFINE", yytext);}
+endef {print_token("ENDEF", yytext);}
 
-{TARGET_NAME}:" "*{DEPENDENCIES} {print_token("TARGET", yytext);}
+{SPECIAL_CONSTANTS}" "*(:|=)" "*{DEPENDENCIES} {print_token("SPECIAL_CONSTANTS", yytext); /*return yytext;*/}
+{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); /*return yytext;*/}
+
+({TARGET_NAME}:{1,2}" "*)+{DEPENDENCIES};? {print_token("TARGET", yytext);}
 ({RECIPE}{PERENOS}?)+ {print_token("RECIPE", yytext);}
-{NAME}" "*(:)?=" "*{DEPENDENCIES} {print_token("VARIABLE", yytext);}
+{NAME}" "*(:{1,3}|\?|\+|!)?=" "*{DEPENDENCIES} {print_token("VARIABLE", yytext);}
+$"("{NAME}")" {print_token("VARIABLE_REPLACE", yytext);}
 
 ^((\t)|(" "{2,4}))+ {print_token("TAB", yytext); return TAB;}
 
