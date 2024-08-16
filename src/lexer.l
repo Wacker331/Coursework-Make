@@ -16,11 +16,11 @@
 
 SPECIAL_CONSTANTS   (.(PHONY|SUFFIXES|DEFAULT|PRECIOUS|INTERMEDIATE|NOTINTERMEDIATE|SECONDARY|SECONDEXPANSION|DELETE_ON_ERROR|IGNORE|LOW_RESOLUTION_TIME|SILENT|EXPORT_ALL_VARIABLES|NOTPARALLEL|ONESHELL|POSIX))
 RESERVED_WORDS      (include|define|endef)
-SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|\^|\?|\+|!|\||&|\{|\})
+SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|\^|\?|\+|!|\||&|\{|\}|,|;)
 
 TOKEN      [A-Za-z0-9\._%/-]+
 COMMENT     #.*
-NAME [A-Za-z_%]{TOKEN}?
+NAME [A-Za-z_%/.]{TOKEN}?
 
 %%
 {SPECIAL_CONSTANTS} {print_token("SPECIAL_CONSTANTS", yytext); yylval.stringValue = yytext; return SPECIAL_CONSTANTS;}
@@ -39,9 +39,9 @@ NAME [A-Za-z_%]{TOKEN}?
 
 (" "|\t)+ {print_token("SPACE", yytext); /*return SPACE;*/}
 
-\\" "*{COMMENT}?\n" "* {print_token("PERENOS", yytext); line++;}
+\\" "*{COMMENT}?\n(" "|\t)* {print_token("PERENOS", yytext); line++;}
 \n|; {print_token("SEPARATOR", yytext); if (*yytext != ';') line++; return SEPARATOR;}
 
-.   { print_token("UNKNOWN", yytext); return UNKNOWN;}
+.   { print_token("UNKNOWN", yytext); yylval.charValue = *yytext; return UNKNOWN;}
 
 %%

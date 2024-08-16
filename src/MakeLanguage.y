@@ -16,11 +16,13 @@
   char* stringValue;
 }
 %token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS DEFINE ENDEF
+%type<charValue> UNKNOWN
+%right '$'
 
 %%
-result: SEPARATOR result
-        | VARIABLE result
-        | TARGET DEPENDENCIES SEPARATOR RECIPE result
+result: SEPARATOR result | ';' result
+        | VARIABLE SEPARATOR result | VARIABLE ';' result
+        | TARGET DEPENDENCIES ';' RECIPE result | TARGET DEPENDENCIES SEPARATOR RECIPE result 
         {
           printf("TARGET REDUCED in result\n");
         }
@@ -28,11 +30,13 @@ result: SEPARATOR result
         | '$' '(' NAME ')' result
         |
 
-TARGET: name ':'
+TARGET: 
+        | name ':' TARGET
 				{
           printf("TARGET REDUCED\n");
         }
 				| name ':' ':'
+        | name '&' ':'
         | name TARGET
 				{
           printf("TARGET CONTINUES\n");
@@ -40,30 +44,42 @@ TARGET: name ':'
         | SPECIAL_CONSTANTS ':'
 
 VARIABLE: NAME '=' SENTENCE
-					| NAME '?' '=' SENTENCE
+          | NAME '?' '=' SENTENCE
 					| NAME '+' '=' SENTENCE
 					| NAME '!' '=' SENTENCE
           | SPECIAL_CONSTANTS '='
 
 RECIPE: 
         | TAB RECIPE_SENTENCE SEPARATOR RECIPE
+        | TAB RECIPE_SENTENCE ';' RECIPE_SENTENCE RECIPE
+        {
+          printf("check5\n");
+        }
 
 DEPENDENCIES:  
               | name DEPENDENCIES
+              | '|' DEPENDENCIES
+              | TOKEN DEPENDENCIES
 
 RECIPE_SENTENCE: TOKEN RECIPE_SENTENCE
 								| name RECIPE_SENTENCE
 								| UNKNOWN RECIPE_SENTENCE
-								| '$' RECIPE_SENTENCE
+                {
+                  printf("%c", $1);
+                }
                 | ':' RECIPE_SENTENCE
+                | '^' RECIPE_SENTENCE
+                | '?' RECIPE_SENTENCE
 								| 
 
 SENTENCE: TOKEN
           | name
+          | name ':' name
           | TOKEN SENTENCE
           | name SENTENCE
 					| TOKEN '$' SENTENCE
           | name '$' SENTENCE
+          |
 
 DIRECTIVE: DEFINE NAME SEPARATOR RECIPE ENDEF
           | DEFINE NAME '=' SEPARATOR RECIPE ENDEF
@@ -72,6 +88,40 @@ DIRECTIVE: DEFINE NAME SEPARATOR RECIPE ENDEF
 					| DEFINE NAME '!' '=' SEPARATOR RECIPE ENDEF
 
 name: NAME
+      | '*' NAME
       | '$' '(' NAME ')'
+      {
+        printf("check2\n");
+      }
       | '$' '$' '(' NAME ')'
+      | '$' '$' '(' '$' '$' UNKNOWN NAME ')'
+      | '$' '$' '(' NAME name_tuple ')'
+      | '$' '(' NAME name_tuple ')'
+      | '$' '$' '+'
+      | '$' '$' '^'
+      | '$' '$' '*'
+      | '$' '*'
+      | '$' '^'
+      | '$' '?'
+      | '$' '$' NAME
+      | '$' UNKNOWN
+      {
+        printf("check\n");
+      }
+      | '$' '$' UNKNOWN
+      {
+        printf("%c\n", $3);
+        if ($3 != '<' && $3 != '*')
+          yyerror("Wrong arg");
+      }
+
+name_tuple: name ',' name_tuple
+            | empty ',' name_tuple
+            | name name_tuple
+            |
+            {
+              printf("check3\n");
+            }
+
+empty: 
 %%
