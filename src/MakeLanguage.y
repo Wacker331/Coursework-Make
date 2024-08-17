@@ -15,14 +15,15 @@
   char charValue;
   char* stringValue;
 }
-%token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS DEFINE ENDEF
+%token TAB SPACE UNKNOWN SEPARATOR NAME TOKEN RESERVED_WORDS SPECIAL_CONSTANTS DEFINE ENDEF EXPORT
 %type<charValue> UNKNOWN
 %right '$'
+%left ':'
 
 %%
 result: SEPARATOR result | ';' result
         | VARIABLE SEPARATOR result | VARIABLE ';' result
-        | TARGET DEPENDENCIES ';' RECIPE result | TARGET DEPENDENCIES SEPARATOR RECIPE result 
+        | TARGET DEPENDENCIES ';' RECIPE_SENTENCE SEPARATOR RECIPE result | TARGET DEPENDENCIES SEPARATOR RECIPE result
         {
           printf("TARGET REDUCED in result\n");
         }
@@ -30,46 +31,53 @@ result: SEPARATOR result | ';' result
         | '$' '(' NAME ')' result
         |
 
-TARGET: 
-        | name ':' TARGET
-				{
-          printf("TARGET REDUCED\n");
-        }
+TARGET: name ':'
 				| name ':' ':'
         | name '&' ':'
         | name TARGET
-				{
-          printf("TARGET CONTINUES\n");
-        }
         | SPECIAL_CONSTANTS ':'
 
 VARIABLE: NAME '=' SENTENCE
           | NAME '?' '=' SENTENCE
 					| NAME '+' '=' SENTENCE
 					| NAME '!' '=' SENTENCE
+          | EXPORT NAME '=' SENTENCE
+          | EXPORT NAME '?' '=' SENTENCE
+					| EXPORT NAME '+' '=' SENTENCE
+					| EXPORT NAME '!' '=' SENTENCE
+          | EXPORT NAME 
           | SPECIAL_CONSTANTS '='
 
 RECIPE: 
         | TAB RECIPE_SENTENCE SEPARATOR RECIPE
-        | TAB RECIPE_SENTENCE ';' RECIPE_SENTENCE RECIPE
-        {
-          printf("check5\n");
-        }
 
-DEPENDENCIES:  
+UNTABBED_RECIPE: 
+                | RECIPE_SENTENCE SEPARATOR UNTABBED_RECIPE
+                {
+                  printf("1\n");
+                }
+
+DEPENDENCIES: 
               | name DEPENDENCIES
               | '|' DEPENDENCIES
               | TOKEN DEPENDENCIES
+              | TARGET DEPENDENCIES
 
 RECIPE_SENTENCE: TOKEN RECIPE_SENTENCE
 								| name RECIPE_SENTENCE
 								| UNKNOWN RECIPE_SENTENCE
-                {
-                  printf("%c", $1);
-                }
                 | ':' RECIPE_SENTENCE
                 | '^' RECIPE_SENTENCE
                 | '?' RECIPE_SENTENCE
+                | ';' RECIPE_SENTENCE
+                | ',' RECIPE_SENTENCE
+                | '(' RECIPE_SENTENCE
+                | ')' RECIPE_SENTENCE
+                | '*' RECIPE_SENTENCE
+                | '\'' RECIPE_SENTENCE
+                | '\"' RECIPE_SENTENCE
+                | '&' RECIPE_SENTENCE
+                | '=' RECIPE_SENTENCE
 								| 
 
 SENTENCE: TOKEN
@@ -79,6 +87,8 @@ SENTENCE: TOKEN
           | name SENTENCE
 					| TOKEN '$' SENTENCE
           | name '$' SENTENCE
+          | '\'' SENTENCE
+          | '\"' SENTENCE
           |
 
 DIRECTIVE: DEFINE NAME SEPARATOR RECIPE ENDEF
@@ -86,13 +96,17 @@ DIRECTIVE: DEFINE NAME SEPARATOR RECIPE ENDEF
 					| DEFINE NAME '?' '=' SEPARATOR RECIPE ENDEF
 					| DEFINE NAME '+' '=' SEPARATOR RECIPE ENDEF
 					| DEFINE NAME '!' '=' SEPARATOR RECIPE ENDEF
+          | DEFINE NAME SEPARATOR UNTABBED_RECIPE ENDEF
+          | DEFINE NAME '=' SEPARATOR UNTABBED_RECIPE ENDEF
+					| DEFINE NAME '?' '=' SEPARATOR UNTABBED_RECIPE ENDEF
+					| DEFINE NAME '+' '=' SEPARATOR UNTABBED_RECIPE ENDEF
+					| DEFINE NAME '!' '=' SEPARATOR UNTABBED_RECIPE ENDEF
 
 name: NAME
+      | NAME '?'
       | '*' NAME
       | '$' '(' NAME ')'
-      {
-        printf("check2\n");
-      }
+      | '$' '(' UNKNOWN NAME ')'
       | '$' '$' '(' NAME ')'
       | '$' '$' '(' '$' '$' UNKNOWN NAME ')'
       | '$' '$' '(' NAME name_tuple ')'
@@ -105,9 +119,7 @@ name: NAME
       | '$' '?'
       | '$' '$' NAME
       | '$' UNKNOWN
-      {
-        printf("check\n");
-      }
+      | '$' UNKNOWN NAME '$' '$' '$' '$'
       | '$' '$' UNKNOWN
       {
         printf("%c\n", $3);
@@ -119,9 +131,6 @@ name_tuple: name ',' name_tuple
             | empty ',' name_tuple
             | name name_tuple
             |
-            {
-              printf("check3\n");
-            }
 
 empty: 
 %%
