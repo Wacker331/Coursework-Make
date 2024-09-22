@@ -28,3 +28,6 @@ MakeFile:
 clean:
 	rm build/*
 	rm $(TARGET)
+
+output:
+	bison -d $(BISON_SOURCE) -o $(BISON_PRECOMPILED) -v -g --html
