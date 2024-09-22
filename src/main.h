@@ -13,7 +13,7 @@ int TargetsNum = 0;
 struct Variable
 {
     char Name[MAX_CHAR];
-    char Value[MAX_CHAR];
+    char Value[4 * MAX_CHAR];
 };
 
 struct Target
@@ -24,10 +24,6 @@ struct Target
 
 void add_variable(char* name, char* value);
 void add_target(char* name, char* dependencies);
-
-void print_target()
-{
-    printf("Target: %s; Depens: %s", Targets[TargetsNum - 1].Name, Targets[TargetsNum - 1].Dependencies);
-}
+char* find_variable(char* name);
 
 #endif

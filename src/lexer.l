@@ -49,7 +49,7 @@ undefine {print_token("UNDEFINE", yytext); return UNDEFINE;}
 
 {COMMENT} {print_token("COMMENT", yytext);}
 {NAME} {print_token("NAME", yytext); yylval.stringValue = malloc(sizeof(char) * strlen(yytext) + 1); strcpy(yylval.stringValue, yytext); return NAME;}
-{TOKEN} {print_token("TOKEN", yytext);return TOKEN;}
+{TOKEN} {print_token("TOKEN", yytext); yylval.stringValue = malloc(sizeof(char) * strlen(yytext) + 1); strcpy(yylval.stringValue, yytext); return TOKEN;}
 
 (" "|\t)+ {print_token("SPACE", yytext); /*return SPACE;*/}
 

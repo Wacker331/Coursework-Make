@@ -49,6 +49,8 @@ int main(int argc, char* argv[])
     yyparse();
     for (int i = 0; i < TargetsNum; i++)
         printf("Target: %s; Depens: %s\n", Targets[i].Name, Targets[i].Dependencies);
+    for (int i = 0; i < VariablesNum; i++)
+        printf("Variable_name: %s; Value: %s\n", Variables[i].Name, Variables[i].Value);
     return 0;
 }
 
@@ -63,7 +65,7 @@ void add_variable(char* name, char* value)
         Variables = realloc(Variables, sizeof(struct Variable) * (VariablesNum + 1));
     }
     strncpy(Variables[VariablesNum].Name, name, MAX_CHAR);
-    strncpy(Variables[VariablesNum].Value, value, MAX_CHAR);
+    strncpy(Variables[VariablesNum].Value, value, 4 * MAX_CHAR);
     VariablesNum++;
 }
 
@@ -80,4 +82,20 @@ void add_target(char* name, char* dependencies)
     strncpy(Targets[TargetsNum].Name, name, MAX_CHAR);
     strncpy(Targets[TargetsNum].Dependencies, dependencies, 4 * MAX_CHAR);
     TargetsNum++;
+}
+
+char* find_variable(char* name)
+{
+    if (Variables != NULL && name != NULL && VariablesNum > 0)
+    {
+        for (int i = 0; i < VariablesNum; i++)
+        {
+            if (Variables[i].Name != NULL && strcmp(Variables[i].Name, name) == 0)
+            {
+                // printf("%s\n", Variables[i].Value);
+                return Variables[i].Value;
+            }
+        }
+    }
+    return NULL;
 }
