@@ -8,7 +8,7 @@
 
     void print_token(const char* token_type, const char* token_text) 
     {
-        printf("Line: %d - %s: \"%s\"\n", line, token_type, token_text);
+        // printf("Line: %d - %s: \"%s\"\n", line, token_type, token_text);
     }
 %}
 

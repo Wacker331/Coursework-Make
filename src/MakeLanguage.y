@@ -9,6 +9,8 @@
     {
         printf("Line: %d - %s\n", line, token_type);
     }
+    extern void add_variable(char* name, char* value);
+    extern void add_target(char* name, char* dependencies);
     extern char* find_variable(char* name);
 %}
 
@@ -56,7 +58,6 @@ TARGET: name ':'
         }
         | name TARGET
         {
-          printf("Test: %s\n", $1);
           $$ = calloc(sizeof(char), strlen($1) + strlen($2) + 2);
           strcpy($$, $1);
           $$ = strcat($$, " ");
