@@ -19,33 +19,34 @@ RESERVED_WORDS      (include|define|endef|override|undefine)
 SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|;|>|<|\^|@|\?|\+|!|\||&|\{|\})
 PERENOS             \\" "*{COMMENT}?\n" "*
 
-TOKEN               [A-Za-z0-9\*$@\._%/-]+
+TOKEN               [A-Za-z0-9\*$@\._%/\\\"=-]+
 COMMENT             #.*
-NAME                [A-Za-z_\*%/]{TOKEN}?
+NAME                [A-Za-z0-9_\.*%/-]{TOKEN}?
+VARIABLE            {NAME}" "*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)*
 
 TARGET_NAME         ((($$?"("{NAME}")")|({NAME}))" "*)+
-DEPENDENCIES        ((($$?"("{TOKEN}")")|({NAME})|($$?"("((patsubst)|(addsuffix))" ".*")")|$$?(<|\^|\+|\*))" "*{PERENOS}?)*
-RECIPE              (" "{2,}|\t)+(.)*
+DEPENDENCIES        ((\|" "*)?(($$?"("{TOKEN}")")|({NAME})|($$?"("((patsubst)|(addsuffix))" ".*")")|$$?(<|\^|\+|\*)|$$?"("{NAME}:{NAME}={NAME}")")" "*{PERENOS}?)*
+RECIPE              (" "{2,}|\t)+(.)+
 
 %%
-include" "+{DEPENDENCIES} {print_token("INCLUDE", yytext);}
-define" "+{NAME}" "*((:{1,3}|\?|\+|!)?=)? {print_token("DEFINE", yytext);}
-endef {print_token("ENDEF", yytext);}
+^-?include" "+{DEPENDENCIES} {print_token("INCLUDE", yytext);}
+define" "+{NAME}" "*((:{1,3}|\?|\+|!)?=)? {print_token("DEFINE", yytext); return DEFINE;}
+endef {print_token("ENDEF", yytext); return ENDEF;}
+("vpath"|"VPATH").* {print_token("VPATH", yytext);}
 
-{SPECIAL_CONSTANTS}" "*(:|=)" "*{DEPENDENCIES} {print_token("SPECIAL_CONSTANTS", yytext); /*return yytext;*/}
-{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext); /*return yytext;*/}
+{SPECIAL_CONSTANTS}" "*(:|=)" "*{DEPENDENCIES} {print_token("SPECIAL_CONSTANTS", yytext);}
+{RESERVED_WORDS} {print_token("RESERVED_WORDS", yytext);}
 
-({TARGET_NAME}:{1,2}" "*)+{DEPENDENCIES};? {print_token("TARGET", yytext);}
-({RECIPE}{PERENOS}?)+ {print_token("RECIPE", yytext);}
-{NAME}" "*(:{1,3}|\?|\+|!)?=" "*{DEPENDENCIES} {print_token("VARIABLE", yytext);}
+({TARGET_NAME}&?:{1,2}" "*)+(({DEPENDENCIES})|({VARIABLE}))(;.*)? {print_token("TARGET", yytext); return TARGET;}
+({RECIPE}{PERENOS}?)+ {print_token("RECIPE", yytext); return RECIPE;}
+{NAME}" "*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)* {print_token("VARIABLE", yytext); return VARIABLE;}
 $"("{NAME}")" {print_token("VARIABLE_REPLACE", yytext);}
-
-^((\t)|(" "{2,4}))+ {print_token("TAB", yytext); return TAB;}
 
 {COMMENT} {print_token("COMMENT", yytext);}
 
-\\" "*{COMMENT}?\n" "* {print_token("PERENOS", yytext); line++;}
-\n {print_token("SEPARATOR", yytext); line++; return SEPARATOR;}
+^(" "|\t)*\n {print_token("EMPTY_LINE", yytext); line++; return EMPTY_LINE;}
+{PERENOS} {print_token("PERENOS", yytext); line++;}
+\n {print_token("SEPARATOR", yytext); line++;}
 
 .   { print_token("UNKNOWN", yytext); return UNKNOWN;}
 

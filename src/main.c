@@ -12,6 +12,7 @@ int yylex(void);
 void yyerror(const char *str)
 {
     printf("%s error on line: %d\n", str, line);
+    exit(-1);
 }
 
 int main(int argc, char* argv[])
@@ -46,5 +47,7 @@ int main(int argc, char* argv[])
         return -1;
     }
     // return yylex();
-    return yyparse();
+    yyparse();
+    printf("Success\n");
+    return 0;
 }

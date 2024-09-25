@@ -16,34 +16,19 @@
   char* stringValue;
 }
 %debug
-%token WORD TAB SPACE UNKNOWN SEPARATOR NAME TOKEN
+%token UNKNOWN SEPARATOR TARGET RECIPE EMPTY_LINE VARIABLE DEFINE ENDEF
 
 %%
 result: SEPARATOR result
         | VARIABLE result
         | TARGET result
-        | VARIABLE
-        | TARGET
-        | SEPARATOR
+        | TARGET RECIPES EMPTY_LINE result
+        | TARGET RECIPES result
+        | EMPTY_LINE result
+        | DEFINE RECIPES ENDEF result
+        | 
 
-VARIABLE: NAME '='
-          | NAME SPACE '='
-          | VARIABLE SENTENCE
-
-TARGET: NAME SPACE ':'
-        | NAME ':'
-        | TARGET SENTENCE
-        | TARGET SEPARATOR RECIPE
-
-RECIPE: TAB SENTENCE
-        | TAB SENTENCE RECIPE
-
-SENTENCE: TOKEN SPACE SENTENCE
-          | NAME SPACE SENTENCE
-          | WORD SPACE SENTENCE
-          | TOKEN
-          | NAME
-          | SPACE
-          | WORD
+RECIPES: RECIPE
+        | RECIPE RECIPES
 
 %%
