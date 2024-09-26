@@ -16,7 +16,8 @@
   char* stringValue;
 }
 %debug
-%token UNKNOWN SEPARATOR TARGET RECIPE EMPTY_LINE VARIABLE DEFINE ENDEF
+%token UNKNOWN SEPARATOR TARGET RECIPE EMPTY_LINE VARIABLE DEFINE ENDEF IF IFEQ IFDEF ELSE ENDIF
+%right ENDIF
 
 %%
 result: SEPARATOR result
@@ -26,9 +27,18 @@ result: SEPARATOR result
         | TARGET RECIPES result
         | EMPTY_LINE result
         | DEFINE RECIPES ENDEF result
+        | DEFINE ENDEF result
+        | IF result ELSE_CONSTRUCT ENDIF result
+        | IF RECIPES ELSE_CONSTRUCT ENDIF result
+        | IFEQ result ELSE_CONSTRUCT ENDIF result
+        | IFEQ RECIPES ELSE_CONSTRUCT ENDIF result
+        | IFDEF result ELSE_CONSTRUCT ENDIF result
+        | IFDEF RECIPES ELSE_CONSTRUCT ENDIF result
         | 
 
 RECIPES: RECIPE
-        | RECIPE RECIPES
+        | RECIPE result RECIPES
+
+ELSE_CONSTRUCT: | ELSE result | ELSE RECIPES
 
 %%
