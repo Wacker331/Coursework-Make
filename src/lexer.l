@@ -9,7 +9,7 @@
     void print_token(const char* token_type, const char* token_text) 
     {
         printf("Line: %d - %s: \"%s\"\n", line, token_type, token_text);
-    }
+    };
 %}
 
 %option noyywrap
@@ -20,7 +20,7 @@ SPECIAL_SYMBOLS     (:|=|$|"("|")"|\*|;|>|<|\^|@|\?|\+|!|\||&|\{|\})
 PERENOS             \\" "*{COMMENT}?\n" "*
 
 TOKEN               [A-Za-z0-9\*$@\._%/\\\"=-]+
-COMMENT             #.*
+COMMENT             (" "|\t)*#.*
 NAME                [A-Za-z0-9_\.*%/-]{TOKEN}?
 VARIABLE            {NAME}" "*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)*
 

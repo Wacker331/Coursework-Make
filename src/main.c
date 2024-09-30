@@ -47,7 +47,10 @@ int main(int argc, char* argv[])
         return -1;
     }
     // return yylex();
-    yyparse();
-    printf("Success\n");
+    if (yyparse() == 0)
+        printf("Success\n");
+    else
+        printf("Failed :(\n");
+    
     return 0;
 }
