@@ -22,7 +22,9 @@ PERENOS             \\" "*{COMMENT}?\n" "*
 TOKEN               [A-Za-z0-9\*$@\._%/\\\"=-]+
 COMMENT             (" "|\t)*#.*
 NAME                [A-Za-z0-9_\.*%/-]{TOKEN}?
-VARIABLE            {NAME}" "*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)*
+VARIABLE            (override" "+)?{NAME}(" "|\t)*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)*
+
+IFEQ                ifn?eq" "+"("{DEPENDENCIES}," "*{DEPENDENCIES}")"
 
 TARGET_NAME         ((($$?"("{NAME}")")|({NAME}))" "*)+
 DEPENDENCIES        ((\|" "*)?(($$?"("{TOKEN}")")|({NAME})|($$?"("((patsubst)|(addsuffix)|(findstring)|(wildcard))" ".*")")|$$?(<|\^|\+|\*)|$$?"("{NAME}:{NAME}={NAME}")")" "*{PERENOS}?)*
@@ -33,9 +35,9 @@ RECIPE              (" "{2,}|\t)+(.)+
 define" "+{NAME}(" "|\t)*((:{1,3}|\?|\+|!)?=)? {print_token("DEFINE", yytext); return DEFINE;}
 endef {print_token("ENDEF", yytext); return ENDEF;}
 if" "+{DEPENDENCIES} {print_token("IF", yytext); return IF;}
-ifn?eq" "+"("{DEPENDENCIES}," "*{DEPENDENCIES}")" {print_token("IFEQ", yytext); return IFEQ;}
+{IFEQ} {print_token("IFEQ", yytext); return IFEQ;}
 ifn?def" "+{DEPENDENCIES} {print_token("IFDEF", yytext); return IFDEF;}
-else(" "|\t)* {print_token("ELSE", yytext); return ELSE;}
+else(" "|\t)*{IFEQ}? {print_token("ELSE", yytext); return ELSE;}
 endif(" "|\t)* {print_token("ENDIF", yytext); return ENDIF;}
 ("vpath"|"VPATH").* {print_token("VPATH", yytext);}
 
@@ -45,7 +47,7 @@ endif(" "|\t)* {print_token("ENDIF", yytext); return ENDIF;}
 
 ({RECIPE}{PERENOS}?)+ {print_token("RECIPE", yytext); return RECIPE;}
 ({TARGET_NAME}&?:{1,2}" "*)+(({DEPENDENCIES})|({VARIABLE}))(;.*)? {print_token("TARGET", yytext); return TARGET;}
-{NAME}" "*(:{1,3}|\?|\+|!)?=" "*(.*{PERENOS}?)* {print_token("VARIABLE", yytext); return VARIABLE;}
+{VARIABLE} {print_token("VARIABLE", yytext); return VARIABLE;}
 $"("{NAME}")" {print_token("VARIABLE_REPLACE", yytext);}
 
 
